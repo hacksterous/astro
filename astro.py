@@ -3,7 +3,6 @@
 #GNU GENERAL PUBLIC LICENSE
 #Version 3, 29 June 2007
 from mpapbf import *
-
 class astro ():
 	pi = mpap('3.1415926535897932')
 	pix2 = mpap('6.2831853071795865')
@@ -25,7 +24,7 @@ class astro ():
 	rashi = ["Mesha","Vrisha","Mithuna","Karka","Simha","Kanya","Tula",
 	   "Vrischika","Dhanu","Makara","Kumbha","Meena"]
 
-	day = ["Ravi","Soma","MAngal","Budh","Brihaspati","Shukra","Shani"]
+	day = ["Ravi","Soma","Mangal","Budh","Brihaspati","Shukra","Shani"]
 
 	tithi = ["Prathamaa","Dvitiya","Tritiya","Chaturthi","Panchami",
 			"Shashthi","Saptami","Ashtami","Navami","Dashami","Ekadashi",
@@ -49,14 +48,14 @@ class astro ():
 			"Purva Ashadha","Uttara Ashadha","Shravana","Dhanishtha","Shatabhisha",
 			"Purva Bhaadra","Uttara Bhaadra","Revati"]
 
-	def calculate_ayanansha (self, d):
+	def ayan (self, d):
 		t = (mpap(d) + 36523.5) / 36525
 		o = mpap('259.183275') - mpap('1934.142008333206') * t + mpap('0.0020777778') * t * t
 		L = mpap('279.696678') + mpap('36000.76892') *t + mpap('0.0003025') * t * t
-		ayan = mpap(17.23) * (o * self.D2R).sin() + (L * self.D2R * 2).sin() * 1.27 - (mpap(5025.64) + mpap(1.11) * t) * t
+		ayanval = mpap(17.23) * (o * self.D2R).sin() + (L * self.D2R * 2).sin() * 1.27 - (mpap(5025.64) + mpap(1.11) * t) * t
 		# Based on Lahiri
-		ayan = (ayan-80861.27) / 3600
-		return ayan
+		ayanval = (ayanval-80861.27) / 3600
+		return ayanval
 
 	def REV (self, x):
 		return x - (x / 360).floor() * 360.0
@@ -127,13 +126,13 @@ class astro ():
 		zec = r * tmp1.sin() * tmp2.sin()
 		
 		# Do some corrections
-		D = self.Lm - self.Ls
-		F = self.Lm - N
+		D = mpap(self.Lm - self.Ls)
+		F = mpap(self.Lm - N)
 		
 		lon = self.R2D * yec.atan2(xec) \
 			- mpap('1.274')  * ((self.Mm - D * 2) * self.D2R).sin() \
 			+ mpap('0.658')  * ((D * 2)*self.D2R).sin() \
-			- mpap('0.186')  * (self.Ms * self.D2R).sin() \
+			- mpap('0.186')  * (mpap(self.Ms) * self.D2R).sin() \
 			- mpap('0.059')  * ((self.Mm * 2 - D * 2) * self.D2R).sin() \
 			- mpap('0.057')  * ((self.Mm - D * 2 + self.Ms) * self.D2R).sin() \
 			+ mpap('0.053')  * ((self.Mm + D * 2) * self.D2R).sin() \
@@ -148,12 +147,13 @@ class astro ():
 	def calculate_panchanga (self, dd, mm, yy, hr, zhr):
 
 		#Calculate day number since 2000 Jan 0.0 TDT
-		d = mpap(367) * yy - mpap(7) * (mpap(yy) + mpap(mm + 9) / 12) / 4 + mpap(275) * mm / 9 + dd - 730530
-		
+		d = mpap(367) * yy - mpap(7) * (mpap(yy) + (mpap(mm) + 9) / 12) / 4 + mpap(275) * mm / 9 + dd - 730530
+		d2 = mpap(367) * mpap(yy) - (mpap(7)) * (mpap(yy) + mpap(5001) + \
+				(mpap(mm) - 9) // 7) // 4 + (mpap(275) * mm) // 9 + dd + 1729777
+
 		#Calculate Ayanamsa, moon and sun longitude
-		ayanansha = self.calculate_ayanansha(d)
-		#print ("ayanansha", ayanansha)
-		vaara = self.day[int((d + 6 ) % 7)] #1 Jan 2000 was Saturday, so add 6; 
+		#print ("vaara index: ", dvi)
+		vaara = self.day[int(d2) % 7] 
 		d = d + (hr - zhr) / 24
 		slon = self.lsun(d)
 		mlon = self.lmoon (d)
@@ -165,16 +165,23 @@ class astro ():
 		tmlon = mlon + (360 if (mlon < slon) else 0)
 		tslon = slon
 		n = int((tmlon - tslon) / 12)
+		#print ("tithi and paksha index: ", n)
 		tithi = self.tithi[n]
 		paksha = "Shukla" if (n <= 14) else "Krishna"
 			
+		ayanansha = self.ayan(d)
+		#print ("ayanansha", ayanansha)
 		#Calculate Nakshatra
 		tmlon = self.REV(mlon + ayanansha)
+		ni = int(tmlon * 6 / 80)
+		#print ("nakshatra index: ", ni)
 		nakshatra = self.nakshatra[int(tmlon * 6 / 80)]
 		
 		#Calculate Yoga
 		tmlon = mlon + ayanansha
 		tslon = slon + ayanansha;
+		ni = int(self.REV(tmlon + tslon) * 6 / 80)
+		#print ("yoga index: ", ni)
 		yoga = self.yoga[int(self.REV(tmlon + tslon) * 6 / 80)]
 		
 		#Calculate Karana
@@ -187,15 +194,19 @@ class astro ():
 			n -= 50
 		if n > 0 and n < 57:
 			n = (n - 1) - int((n - 1) / 7) * 7
+		#print ("karana index: ", n)
 		karan = self.karan[n]
 			
 		#Calculate the rashi in which the moon is present
 		tmlon = self.REV(mlon + ayanansha)
+		ni = int(tmlon / 30)
+		#print ("rashi index: ", n)
 		rashi = self.rashi[int(tmlon / 30)]
 
 		print(' Tithi: ' + tithi, '\n', paksha + ' paksha\n', vaara + 'vaara\n', 'Nakshatra: ' + nakshatra + '\n',\
 				'Yoga: ' + yoga + '\n',\
 				'Karana: ' + karan + '\n', 'Raashi: ' + rashi)
+		return
 
 	def sunrise_equation (self, dd, mm, yy):
 		#---day number since 2000 Jan 0.0 TDT
