@@ -148,11 +148,9 @@ class astro ():
 
 		#Calculate day number since 2000 Jan 0.0 TDT
 		d = mpap(367) * yy - mpap(7) * (mpap(yy) + (mpap(mm) + 9) / 12) / 4 + mpap(275) * mm / 9 + dd - 730530
-		d2 = mpap(367) * mpap(yy) - (mpap(7)) * (mpap(yy) + mpap(5001) + \
-				(mpap(mm) - 9) // 7) // 4 + (mpap(275) * mm) // 9 + dd + 1729777
-
+		d2 = mpap(367) * mpap(yy) - ((mpap(7)) * (mpap(yy) + mpap(5001) + \
+				(mpap(mm) - 9) // 7)) // 4 + (mpap(275) * mm) // 9 + dd + 1729777
 		#Calculate Ayanamsa, moon and sun longitude
-		#print ("vaara index: ", dvi)
 		vaara = self.day[int(d2) % 7] 
 		d = d + (hr - zhr) / 24
 		slon = self.lsun(d)
@@ -209,13 +207,16 @@ class astro ():
 		return
 
 	def sunrise_equation (self, dd, mm, yy):
-		#---day number since 2000 Jan 0.0 TDT
-		d = mpap(367) * mpap(yy) - (mpap(7)) * (mpap(yy) + mpap(5001) + \
-				(mpap(mm) - 9) // 7) // 4 + (mpap(275) * mm) // 9 + dd + 1729777
+		#the Julian date
+		d = mpap(367) * mpap(yy) - ((mpap(7)) * (mpap(yy) + mpap(5001) + \
+				(mpap(mm) - 9) // 7)) // 4 + (mpap(275) * mm) // 9 + dd + 1729777
 		#print ("Julian day to d is ", d)
 
 		#d = Jdate is the Julian date
 		#n is the number of days since Jan 1st, 2000 12:00.
+		#2451545.0 is the equivalent Julian year of Julian days for 2000, 1, 1.5.
+		#(68.184) / 86400 = 0.0008 is the fractional Julian Day for leap 
+		#seconds and terrestrial time.
 		n = d - mpap('2451545.0') + mpap(68.184) / 86400
 
 		#---mean solar noon
