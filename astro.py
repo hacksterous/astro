@@ -144,7 +144,7 @@ class astro ():
 			+ mpap('0.011')  * ((self.Mm - D * 4) * self.D2R).sin()
 		return self.REV(lon)
 
-	def calculate_panchanga (self, dd, mm, yy, hr, zhr):
+	def calc5 (self, dd, mm, yy, hr, zhr):
 
 		#Calculate day number since 2000 Jan 0.0 TDT
 		d = mpap(367) * yy - mpap(7) * (mpap(yy) + (mpap(mm) + 9) / 12) / 4 + mpap(275) * mm / 9 + dd - 730530
@@ -206,7 +206,7 @@ class astro ():
 				'Karana: ' + karan + '\n', 'Raashi: ' + rashi)
 		return
 
-	def sunrise_equation (self, dd, mm, yy):
+	def sun (self, dd, mm, yy):
 		#the Julian date
 		d = mpap(367) * mpap(yy) - ((mpap(7)) * (mpap(yy) + mpap(5001) + \
 				(mpap(mm) - 9) // 7)) // 4 + (mpap(275) * mm) // 9 + dd + 1729777
@@ -277,8 +277,7 @@ class astro ():
 		dayLightHours = (jSET - jRISE) * 24
 		#print ("jNOON is :", jNOON)
 		riseToNoonHrs = (jNOON - jRISE) * 24
-
-		noonToSetHrs = (jNOON - jRISE) * 24
+		noonToSetHrs = (jSET - jNOON) * 24
 
 		sriseHr = str( mpap(12) - riseToNoonHrs.ceil()) + ':' + ((mpap(1) - riseToNoonHrs.frac()) * 60).roundstr(2)
 		ssetHr = str(int(noonToSetHrs) + 12) + ':' + (noonToSetHrs.frac() * 60).roundstr(2)
