@@ -48,6 +48,18 @@ class astro ():
 			"Purva Ashadha","Uttara Ashadha","Shravana","Dhanishtha","Shatabhisha",
 			"Purva Bhaadra","Uttara Bhaadra","Revati"]
 
+	def datenum(self, day, mon, year, hour, minute):
+		cumudays = [0, 0,31,59,90,120,151,181,212,243,273,304,334]
+		#Calculate the serial date number:
+		dNum = (365 * year  + cumudays[mon] + day + \
+			year / 4 - year / 100 + year / 400 + \
+			(year % 4 != 0) - (year % 100 != 0) + (year % 400 != 0) + \
+			((hour * 60 + minute) / 1440.0))
+		if (mon > 2):
+			if (((year % 4 == 0) and (year % 100 != 0)) or (year % 400 == 0)):
+				dNum += 1.0
+		return dNum
+
 	def ayan (self, d):
 		t = (mpap(d) + 36523.5) / 36525
 		o = mpap('259.183275') - mpap('1934.142008333206') * t + mpap('0.0020777778') * t * t
@@ -148,10 +160,23 @@ class astro ():
 
 		#Calculate day number since 2000 Jan 0.0 TDT
 		d = mpap(367) * yy - mpap(7) * (mpap(yy) + (mpap(mm) + 9) / 12) / 4 + mpap(275) * mm / 9 + dd - 730530
-		d2 = mpap(367) * mpap(yy) - ((mpap(7)) * (mpap(yy) + mpap(5001) + \
-				(mpap(mm) - 9) // 7)) // 4 + (mpap(275) * mm) // 9 + dd + 1729777
+		#d2_1 = mpap(367) * mpap(yy)
+		#d2_2 = ((mpap(7)) * (mpap(yy) + mpap(5001) + (mpap(mm) - 9) // 7)) // 4 
+		#d2_3 = (mpap(275) * mm) // 9 + dd + 1729777
+		#d2 = mpap(367) * mpap(yy) - ((mpap(7)) * (mpap(yy) + mpap(5001) + \
+		#		(mpap(mm) - 9) // 7)) // 4 + (mpap(275) * mm) // 9 + dd + 1729777
 		#Calculate Ayanamsa, moon and sun longitude
-		vaara = self.day[int(d2) % 7] 
+		#print ("d is ", d)
+		#print ("d2 is ", d2)
+		#print ("d2_1 is ", d2_1)
+		#print ("d2_2 is ", d2_2)
+		#print ("d2_3 is ", d2_3)
+		#print ("d2 is ", d2_1 - d2_2 + d2_3)
+		date = self.datenum(dd, mm, yy, hr, zhr)
+		#print ("datenum is ", date)
+		#print ("datenum % 7 is ", int((date+6) % 7))
+		#vaara = self.day[int(d2) % 7] 
+		vaara = self.day[int(date+5) % 7] 
 		d = d + (hr - zhr) / 24
 		slon = self.lsun(d)
 		mlon = self.lmoon (d)
